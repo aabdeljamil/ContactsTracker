@@ -1,20 +1,16 @@
-
 from flask import Flask, render_template, request, redirect, url_for, flash
 import os
 from models import db, Contact, User
 from flask_login import LoginManager, login_user, login_required, logout_user, current_user, UserMixin
-
+from flask_migrate import Migrate
 
 app = Flask(__name__)
 app.secret_key = os.getenv('SECRET_KEY', 'your-secret-key')
-
-
-# Configure the PostgreSQL database URI: replace with your actual credentials
-app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('DATABASE_URL', 'postgresql://username:password@host:port/dbname')
+app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('DATABASE_URL', 'postgresql://contactstrackerdb_user:BzyRiAolTgngvgS2brZBW5Y50FpmQilP@dpg-d30svjh5pdvs73eaunj0-a.ohio-postgres.render.com/contactstrackerdb')
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
-# Initialize db with app
 db.init_app(app)
+migrate = Migrate(app, db)
 
 # Flask-Login setup
 login_manager = LoginManager()
@@ -25,10 +21,6 @@ login_manager.login_view = 'login'
 @login_manager.user_loader
 def load_user(user_id):
     return User.query.get(int(user_id))
-
-# Make User model compatible with Flask-Login
-class UserLogin(UserMixin, User):
-    pass
 
 @app.route('/')
 @login_required
@@ -53,7 +45,27 @@ def contacts():
         contacts = Contact.query.filter_by(user_id=current_user.id).all()
     return render_template('contacts.html', contacts=contacts)
 
-# Simple login route for demonstration (replace with secure logic in production)
+# Registration route
+@app.route('/register', methods=['GET', 'POST'])
+def register():
+    if request.method == 'POST':
+        username = request.form['username']
+        password = request.form['password']
+        confirm_password = request.form['confirm_password']
+        if password != confirm_password:
+            flash('Passwords do not match')
+            return render_template('register.html')
+        if User.query.filter_by(username=username).first():
+            flash('Username already exists')
+            return render_template('register.html')
+        user = User(username=username, is_admin=False)
+        user.set_password(password)
+        db.session.add(user)
+        db.session.commit()
+        flash('Registration successful! Please log in.')
+        return redirect(url_for('login'))
+    return render_template('register.html')
+
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
@@ -73,8 +85,6 @@ def logout():
     logout_user()
     return redirect(url_for('login'))
 
-
-# Route to show add contact form
 @app.route('/add', methods=['GET', 'POST'])
 @login_required
 def add_contact():
@@ -99,4 +109,4 @@ def add_contact():
     return render_template('add_contact.html')
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run()
