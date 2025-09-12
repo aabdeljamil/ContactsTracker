@@ -14,31 +14,39 @@
     <h1 class="mb-4">{{ current_user.username }}'s Contacts</h1>
     <a href="{{ url_for('add_contact') }}" class="btn btn-md btn-primary mb-3">Add Contact</a>
 
-    <table class="table table-striped table-hover table-bordered">
-        <thead class="table-primary">
-            <tr>
-                <th scope="col">Name</th>
-                <th scope="col">Email</th>
-                <th scope="col">Phone</th>
-                <th scope="col">Rating</th>
-                <th scope="col">Actions</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for contact in contacts %}
-            <tr>
-                <td>{{ contact.name }}</td>
-                <td>{{ contact.email }}</td>
-                <td>{{ contact.phone }}</td>
-                <td>{{ contact.rating }}</td>
-                <td>
-                    <div style="display: flex; justify-content: center;">
-                        <a href="{{ url_for('edit_contact', contact_id=contact.id) }}" class="btn btn-sm btn-warning" style="margin-right: 5px;">Edit</a>
-                        <a href="{{ url_for('delete_contact', contact_id=contact.id) }}" class="btn btn-sm btn-danger" onclick="return confirm('Are you sure you want to delete this contact?');">Delete</a>
-                    </div>
-                </td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
+    {% if contacts|length == 0 %}
+        <div class="alert alert-info">
+            No contacts found. Click "Add Contact" to create your first contact.
+        </div>
+    {% else %}
+        <div class="table-responsive">
+            <table class="table table-striped table-hover table-bordered">
+                <thead class="table-primary">
+                    <tr>
+                        <th scope="col">Name</th>
+                        <th scope="col">Email</th>
+                        <th scope="col">Phone</th>
+                        <th scope="col">Rating</th>
+                        <th scope="col">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for contact in contacts %}
+                    <tr>
+                        <td>{{ contact.name }}</td>
+                        <td>{{ contact.email }}</td>
+                        <td>{{ contact.phone }}</td>
+                        <td>{{ contact.rating }}</td>
+                        <td>
+                            <div style="display: flex; justify-content: center;">
+                                <a href="{{ url_for('edit_contact', contact_id=contact.id) }}" class="btn btn-sm btn-warning me-3">Edit</a>
+                                <a href="{{ url_for('delete_contact', contact_id=contact.id) }}" class="btn btn-sm btn-danger" onclick="return confirm('Are you sure you want to delete this contact?');">Delete</a>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% endif %}
 {% endblock %}

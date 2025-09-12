@@ -6,7 +6,13 @@ from flask_migrate import Migrate
 
 app = Flask(__name__)
 app.secret_key = os.getenv('SECRET_KEY', 'your-secret-key')
-app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get("DATABASE_URL")
+
+# Database configuration for local development. COMMENT THE FOLLOWING LINE IF USING POSTGRESQL
+app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('DATABASE_URL', 'postgresql://contactstrackerdb_user:BzyRiAolTgngvgS2brZBW5Y50FpmQilP@dpg-d30svjh5pdvs73eaunj0-a.ohio-postgres.render.com/contactstrackerdb')
+
+# Database configuration for production (PostgreSQL)
+#app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get("DATABASE_URL")
+
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 db.init_app(app)
@@ -89,7 +95,7 @@ def contacts():
 def add_contact():
     if request.method == 'POST':
         name = request.form['name']
-        email = request.form['email']
+        email = request.form['email'] or None
         phone = request.form.get('phone')
         rating = request.form.get('rating', type=int)
         comments = request.form.get('comments')
@@ -118,7 +124,7 @@ def edit_contact(contact_id):
     
     if request.method == 'POST':
         contact.name = request.form['name']
-        contact.email = request.form['email']
+        contact.email = request.form['email'] or None
         contact.phone = request.form.get('phone')
         contact.rating = request.form.get('rating', type=int)
         contact.comments = request.form.get('comments')

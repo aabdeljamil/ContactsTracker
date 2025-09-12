@@ -6,14 +6,14 @@
     {% with messages = get_flashed_messages(with_categories=true) %}
         {% for category, message in messages %}
             <div class="alert alert-{{ category }} mt-3">
-                {{ message }}
+                {{ message }}   
             </div>
         {% endfor %}
     {% endwith %}
     
     <h1 class="mb-4">Dashboard</h1>
     <div class="row mb-4">
-        <div class="col-md-6">
+        <div class="col-md-6 mb-3">
             <div class="card">
                 <div class="card-body">
                     <h5 class="card-title">Total Contacts</h5>
