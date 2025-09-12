@@ -6,7 +6,7 @@ from flask_migrate import Migrate
 
 app = Flask(__name__)
 app.secret_key = os.getenv('SECRET_KEY', 'your-secret-key')
-app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('DATABASE_URL', 'postgresql://contactstrackerdb_user:BzyRiAolTgngvgS2brZBW5Y50FpmQilP@dpg-d30svjh5pdvs73eaunj0-a.ohio-postgres.render.com/contactstrackerdb')
+app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get("DATABASE_URL")
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 db.init_app(app)
@@ -21,6 +21,45 @@ login_manager.login_view = 'login'
 @login_manager.user_loader
 def load_user(user_id):
     return User.query.get(int(user_id))
+
+@app.route('/login', methods=['GET', 'POST'])
+def login():
+    if request.method == 'POST':
+        username = request.form['username']
+        password = request.form['password']
+        user = User.query.filter_by(username=username).first()
+        if user and user.check_password(password):
+            login_user(user)
+            return redirect(url_for('index'))
+        else:
+            flash('Invalid credentials', 'danger')
+    return render_template('login.html')
+
+@app.route('/logout')
+@login_required
+def logout():
+    logout_user()
+    return redirect(url_for('login'))
+
+@app.route('/register', methods=['GET', 'POST'])
+def register():
+    if request.method == 'POST':
+        username = request.form['username']
+        password = request.form['password']
+        confirm_password = request.form['confirm_password']
+        if password != confirm_password:
+            flash('Passwords do not match', 'danger')
+            return render_template('register.html')
+        if User.query.filter_by(username=username).first():
+            flash('Username already exists', 'danger')
+            return render_template('register.html')
+        user = User(username=username, is_admin=False)
+        user.set_password(password)
+        db.session.add(user)
+        db.session.commit()
+        flash('Registration successful! Please log in.', 'success')
+        return redirect(url_for('login'))
+    return render_template('register.html')
 
 @app.route('/')
 @login_required
@@ -45,47 +84,7 @@ def contacts():
         contacts = Contact.query.filter_by(user_id=current_user.id).all()
     return render_template('contacts.html', contacts=contacts)
 
-# Registration route
-@app.route('/register', methods=['GET', 'POST'])
-def register():
-    if request.method == 'POST':
-        username = request.form['username']
-        password = request.form['password']
-        confirm_password = request.form['confirm_password']
-        if password != confirm_password:
-            flash('Passwords do not match')
-            return render_template('register.html')
-        if User.query.filter_by(username=username).first():
-            flash('Username already exists')
-            return render_template('register.html')
-        user = User(username=username, is_admin=False)
-        user.set_password(password)
-        db.session.add(user)
-        db.session.commit()
-        flash('Registration successful! Please log in.')
-        return redirect(url_for('login'))
-    return render_template('register.html')
-
-@app.route('/login', methods=['GET', 'POST'])
-def login():
-    if request.method == 'POST':
-        username = request.form['username']
-        password = request.form['password']
-        user = User.query.filter_by(username=username).first()
-        if user and user.check_password(password):
-            login_user(user)
-            return redirect(url_for('index'))
-        else:
-            flash('Invalid credentials')
-    return render_template('login.html')
-
-@app.route('/logout')
-@login_required
-def logout():
-    logout_user()
-    return redirect(url_for('login'))
-
-@app.route('/add', methods=['GET', 'POST'])
+@app.route('/contact/add', methods=['GET', 'POST'])
 @login_required
 def add_contact():
     if request.method == 'POST':
@@ -105,8 +104,42 @@ def add_contact():
         db.session.add(contact)
         db.session.commit()
         flash('Contact added!')
-        return redirect(url_for('index'))
-    return render_template('add_contact.html')
+        return redirect(url_for('contacts'))
+    
+    return render_template('contact.html', action="Add", contact={})
+
+@app.route('/contact/edit/<int:contact_id>', methods=['GET', 'POST'])
+@login_required
+def edit_contact(contact_id):
+    contact = Contact.query.get_or_404(contact_id)
+    if contact.user_id != current_user.id and not current_user.is_admin:
+        flash('You do not have permission to view this contact.', 'danger')
+        return redirect(url_for('contacts'))
+    
+    if request.method == 'POST':
+        contact.name = request.form['name']
+        contact.email = request.form['email']
+        contact.phone = request.form.get('phone')
+        contact.rating = request.form.get('rating', type=int)
+        contact.comments = request.form.get('comments')
+        db.session.commit()
+
+        flash("Contact updated successfully!", "success")
+        return redirect(url_for("contacts"))
+        
+    return render_template('contact.html', action="Edit", contact=contact)
+
+@app.route("/contact/delete/<int:contact_id>", methods=["GET", "POST"])
+def delete_contact(contact_id):
+    contact = Contact.query.get_or_404(contact_id)
+    db.session.delete(contact)
+    db.session.commit()
+    flash("Contact deleted successfully!", "success")
+    return redirect(url_for("contacts"))
+
+@app.errorhandler(404)
+def not_found(e):
+    return render_template("404.html"), 404
 
 if __name__ == '__main__':
-    app.run()
+    app.run(debug=True)

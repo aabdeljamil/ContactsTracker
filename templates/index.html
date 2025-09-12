@@ -3,9 +3,17 @@
 {% block title %}Contacts Tracker{% endblock %}
 
 {% block content %}
-    <h1 class="mb-4">Contacts Dashboard</h1>
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% for category, message in messages %}
+            <div class="alert alert-{{ category }} mt-3">
+                {{ message }}
+            </div>
+        {% endfor %}
+    {% endwith %}
+    
+    <h1 class="mb-4">Dashboard</h1>
     <div class="row mb-4">
-        <div class="col-md-4">
+        <div class="col-md-6">
             <div class="card">
                 <div class="card-body">
                     <h5 class="card-title">Total Contacts</h5>
@@ -13,7 +21,7 @@
                 </div>
             </div>
         </div>
-        <div class="col-md-4">
+        <div class="col-md-6">
             <div class="card">
                 <div class="card-body">
                     <h5 class="card-title">Average Rating</h5>
@@ -21,17 +29,5 @@
                 </div>
             </div>
         </div>
-        <div class="col-md-4 d-flex align-items-center">
-            <div>
-                <a href="{{ url_for('add_contact') }}" class="btn btn-success mb-2">Add Contact</a><br>
-                <a href="{{ url_for('contacts') }}" class="btn btn-primary">View All Contacts</a>
-            </div>
-        </div>
     </div>
-    <h2 class="mb-3">Your Contacts</h2>
-    <ul class="list-group mb-4">
-        {% for contact in contacts %}
-            <li class="list-group-item">{{ contact.name }} - {{ contact.email }}</li>
-        {% endfor %}
-    </ul>
 {% endblock %}

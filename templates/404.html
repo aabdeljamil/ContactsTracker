@@ -1,0 +1,15 @@
+{% extends 'base.html' %}
+
+{% block title %}404{% endblock %}
+
+{% block content %}
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% for category, message in messages %}
+            <div class="alert alert-{{ category }} mt-3">
+                {{ message }}
+            </div>
+        {% endfor %}
+    {% endwith %}
+    
+    <h1 class="mb-4" style="display: flex; justify-content: center;">404 Not Found</h1>
+{% endblock %}
