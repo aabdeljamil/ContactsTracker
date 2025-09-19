@@ -5,13 +5,14 @@
 {% block content %}
     {% with messages = get_flashed_messages(with_categories=true) %}
         {% for category, message in messages %}
-            <div class="alert alert-{{ category }} mt-3">
+            <div class="alert alert-{{ category }} alert-dismissible fade show mt-3">
                 {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
             </div>
         {% endfor %}
     {% endwith %}
 
-    <h1 class="mb-4">{{ current_user.username }}'s Contacts</h1>
+    <h1 class="mb-4">My Contacts</h1>
     <a href="{{ url_for('add_contact') }}" class="btn btn-md btn-primary mb-3">Add Contact</a>
 
     {% if contacts|length == 0 %}

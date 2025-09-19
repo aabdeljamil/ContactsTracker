@@ -23,8 +23,9 @@
         </form>
         {% with messages = get_flashed_messages(with_categories=true) %}
             {% for category, message in messages %}
-                <div class="alert alert-{{ category }} mt-3">
+                <div class="alert alert-{{ category }} alert-dismissible fade show mt-3">
                     {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
                 </div>
             {% endfor %}
         {% endwith %}
