@@ -7,12 +7,10 @@ from flask_migrate import Migrate
 app = Flask(__name__)
 app.secret_key = os.getenv('SECRET_KEY', 'your-secret-key')
 
-# Load database connection string from a file so that we don't have sensitive information online (github)
-connString = ''
-with open('dbConnectionString.txt') as stream:
-    connString = stream.readline()
-
 # Database configuration for local development. COMMENT THE FOLLOWING LINE IF USING POSTGRESQL
+# connString = ''
+# with open('dbConnectionString.txt') as stream:
+#     connString = stream.readline()
 # app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('DATABASE_URL', connString)
 
 # Database configuration for production (PostgreSQL)
