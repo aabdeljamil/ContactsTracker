@@ -1,6 +1,6 @@
 {% extends 'base.html' %}
 
-{% block title %}404{% endblock %}
+{% block title %}500{% endblock %}
 
 {% block content %}
     {% with messages = get_flashed_messages(with_categories=true) %}
@@ -12,5 +12,5 @@
         {% endfor %}
     {% endwith %}
     
-    <h1 class="mb-4" style="display: flex; justify-content: center;">An error occured. Please contact the site admin to resolve it, or try again.</h1>
+    <h1 class="mb-4" style="text-align: center;">An error occured. Please contact the site admin to resolve it, or try again.</h1>
 {% endblock %}
