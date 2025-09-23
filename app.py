@@ -3,6 +3,7 @@ import os
 from models import db, Contact, User
 from flask_login import LoginManager, login_user, login_required, logout_user, current_user, UserMixin
 from flask_migrate import Migrate
+from sqlalchemy import desc, asc
 
 app = Flask(__name__)
 app.secret_key = os.getenv('SECRET_KEY', 'your-secret-key')
@@ -73,25 +74,40 @@ def register():
 @app.route('/')
 @login_required
 def index():
-    if current_user.is_admin:
-        contacts = Contact.query.all()
-    else:
-        contacts = Contact.query.filter_by(user_id=current_user.id).all()
-    total_contacts = len(contacts)
     avg_rating = None
+    avg_rating_all = None
+    total_contacts_all = None
+
+    if current_user.is_admin:
+        contacts_all = Contact.query.all()
+        total_contacts_all = len(contacts_all)
+        ratings_all = [c.rating for c in contacts_all if c.rating is not None]
+        if ratings_all:
+            avg_rating_all = round(sum(ratings_all) / len(ratings_all), 2)
+
+    contacts = Contact.query.filter_by(user_id=current_user.id).all()
+    total_contacts = len(contacts)
     ratings = [c.rating for c in contacts if c.rating is not None]
     if ratings:
         avg_rating = round(sum(ratings) / len(ratings), 2)
-    return render_template('index.html', contacts=contacts, total_contacts=total_contacts, avg_rating=avg_rating)
+    return render_template('index.html', total_contacts_all=total_contacts_all, total_contacts=total_contacts, avg_rating=avg_rating, avg_rating_all=avg_rating_all)
 
 @app.route('/contacts')
 @login_required
 def contacts():
-    if current_user.is_admin:
-        contacts = Contact.query.all()
-    else:
-        contacts = Contact.query.filter_by(user_id=current_user.id).all()
+    contacts = Contact.query.filter_by(user_id=current_user.id).order_by(desc(Contact.id)).all()
     return render_template('contacts.html', contacts=contacts)
+
+@app.route('/allcontacts')
+@login_required
+def allContacts():
+    if current_user.is_admin:
+        contacts = Contact.query.order_by(desc(Contact.id)).all()
+    else:
+        flash('You do not have permission to view all contacts.', 'danger')
+        return redirect(url_for('index'))
+    
+    return render_template('allContacts.html', contacts=contacts)
 
 @app.route('/contact/add', methods=['GET', 'POST'])
 @login_required

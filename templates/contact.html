@@ -26,7 +26,7 @@
                 </div>
                 <div class="mb-3">
                     <label for="phone" class="form-label">Phone</label>
-                    <input type="tel" class="form-control shadow" id="phone" name="phone" value="{{ contact.phone or phone or '' }}">
+                    <input type="text" pattern="\d{10}" class="form-control shadow" id="phone" name="phone" value="{{ contact.phone or phone or '' }}">
                 </div>
                 <div class="mb-3">
                     <label for="rating" class="form-label">Rating (1-5)</label>
@@ -42,4 +42,22 @@
             </form>
         </div>
     </div>
+{% endblock %}
+
+{% block scripts %}
+    <script>
+        const phone = document.getElementById("phone");
+
+        phone.addEventListener("input", function () {
+            this.setCustomValidity("");
+        });
+
+        phone.addEventListener("invalid", function () {
+            if (this.value.length == 0) {
+                this.setCustomValidity("");
+            }else {
+                this.setCustomValidity("Phone number must be exactly 10 digits.");
+            }
+        });
+    </script>
 {% endblock %}

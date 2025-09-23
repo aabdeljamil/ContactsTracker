@@ -16,18 +16,42 @@
     <div class="row mb-4">
         <div class="col-md-6 mb-3">
             <div class="card">
-                <div class="card-body">
-                    <h5 class="card-title">Total Contacts</h5>
-                    <p class="card-text display-6">{{ total_contacts }}</p>
-                </div>
+                <ul class="list-group list-group-flush">
+                    <li class="list-group-item">
+                        <div class="card-body">
+                            <h5 class="card-title">My Total Contacts</h5>
+                            <p class="card-text display-6">{{ total_contacts }}</p>
+                        </div>
+                    </li>
+                    {% if current_user.is_admin %}
+                        <li class="list-group-item">
+                            <div class="card-body">
+                                <h5 class="card-title">All Total Contacts</h5>
+                                <p class="card-text display-6">{{ total_contacts_all }}</p>
+                            </div>
+                        </li>
+                    {% endif %}
+                </ul>
             </div>
         </div>
         <div class="col-md-6">
             <div class="card">
-                <div class="card-body">
-                    <h5 class="card-title">Average Rating</h5>
-                    <p class="card-text display-6">{{ avg_rating if avg_rating is not none else 'N/A' }}</p>
-                </div>
+                <ul class="list-group list-group-flush">
+                    <li class="list-group-item">
+                        <div class="card-body">
+                            <h5 class="card-title">My Contacts' Average Rating</h5>
+                            <p class="card-text display-6">{{ avg_rating if avg_rating is not none else 'N/A' }}</p>
+                        </div>
+                    </li>
+                    {% if current_user.is_admin %}
+                        <li class="list-group-item">
+                            <div class="card-body">
+                                <h5 class="card-title">All Contacts' Average Rating</h5>
+                                <p class="card-text display-6">{{ avg_rating_all if avg_rating_all is not none else 'N/A' }}</p>
+                            </div>
+                        </li>
+                    {% endif %}
+                </ul>
             </div>
         </div>
     </div>

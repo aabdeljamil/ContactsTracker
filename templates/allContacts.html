@@ -1,6 +1,6 @@
 {% extends 'base.html' %}
 
-{% block title %}My Contacts{% endblock %}
+{% block title %}All Contacts{% endblock %}
 
 {% block content %}
     {% with messages = get_flashed_messages(with_categories=true) %}
@@ -12,12 +12,11 @@
         {% endfor %}
     {% endwith %}
 
-    <h1 class="mb-4">My Contacts</h1>
-    <a href="{{ url_for('add_contact') }}" class="btn btn-md btn-primary mb-3">Add Contact</a>
+    <h1 class="mb-4">All Contacts</h1>
 
     {% if contacts|length == 0 %}
         <div class="alert alert-info">
-            No contacts found. Click "Add Contact" to create your first contact.
+            No contacts found. To add contacts, please navigate to "My Contacts."
         </div>
     {% else %}
         <div class="table-responsive">
@@ -28,7 +27,8 @@
                         <th scope="col">Email</th>
                         <th scope="col">Phone</th>
                         <th scope="col">Rating</th>
-                        <th scope="col">Actions</th>
+                        <th scope="col">Comments</th>
+                        <th scope="col">User</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -38,12 +38,8 @@
                         <td>{{ contact.email }}</td>
                         <td>{{ contact.phone }}</td>
                         <td>{{ contact.rating }}</td>
-                        <td>
-                            <div style="display: flex; justify-content: center;">
-                                <a href="{{ url_for('edit_contact', contact_id=contact.id) }}" class="btn btn-sm btn-warning me-3">Edit</a>
-                                <a href="{{ url_for('delete_contact', contact_id=contact.id) }}" class="btn btn-sm btn-danger" onclick="return confirm('Are you sure you want to delete this contact?');">Delete</a>
-                            </div>
-                        </td>
+                        <td>{{ contact.comments }}</td>
+                        <td>{{ contact.user.username }}</td>
                     </tr>
                     {% endfor %}
                 </tbody>
