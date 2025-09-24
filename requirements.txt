@@ -1,7 +1,9 @@
 Flask
 Flask-SQLAlchemy
-psycopg2-binary
+Flask-Migrate
 Flask-Login
+Flask-WTF
+psycopg2-binary
 Werkzeug
 gunicorn
-flask-migrate
+SQLAlchemy

@@ -4,15 +4,18 @@ from models import db, Contact, User
 from flask_login import LoginManager, login_user, login_required, logout_user, current_user, UserMixin
 from flask_migrate import Migrate
 from sqlalchemy import desc, asc
+import smtplib
+from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
 
 app = Flask(__name__)
-app.secret_key = os.getenv('SECRET_KEY', 'your-secret-key')
+app.secret_key = os.environ.get('SECRET_KEY', 'your-secret-key')
 
-# Database configuration for local development. COMMENT THE FOLLOWING LINE IF USING POSTGRESQL
+# Database configuration for local development. COMMENT THE FOLLOWING LINES IF USING PRODUCTION
 # connString = ''
 # with open('dbConnectionString.txt') as stream:
 #     connString = stream.readline()
-# app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('DATABASE_URL', connString)
+# app.config['SQLALCHEMY_DATABASE_URI'] = connString
 
 # Database configuration for production (PostgreSQL)
 app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get("DATABASE_URL")
@@ -38,11 +41,13 @@ def login():
         username = request.form['username']
         password = request.form['password']
         user = User.query.filter_by(username=username).first()
+
         if user and user.check_password(password):
             login_user(user)
             return redirect(url_for('index'))
         else:
             flash('Invalid credentials', 'danger')
+
     return render_template('login.html')
 
 @app.route('/logout')
@@ -57,17 +62,22 @@ def register():
         username = request.form['username']
         password = request.form['password']
         confirm_password = request.form['confirm_password']
+
         if password != confirm_password:
             flash('Passwords do not match', 'danger')
             return render_template('register.html')
+        
         if User.query.filter_by(username=username).first():
             flash('Username already exists', 'danger')
             return render_template('register.html')
+        
         user = User(username=username, is_admin=False)
         user.set_password(password)
+
         db.session.add(user)
         db.session.commit()
         flash('Registration successful! Please log in.', 'success')
+
         return redirect(url_for('login'))
     return render_template('register.html')
 
@@ -82,14 +92,17 @@ def index():
         contacts_all = Contact.query.all()
         total_contacts_all = len(contacts_all)
         ratings_all = [c.rating for c in contacts_all if c.rating is not None]
+
         if ratings_all:
             avg_rating_all = round(sum(ratings_all) / len(ratings_all), 2)
 
     contacts = Contact.query.filter_by(user_id=current_user.id).all()
     total_contacts = len(contacts)
     ratings = [c.rating for c in contacts if c.rating is not None]
+
     if ratings:
         avg_rating = round(sum(ratings) / len(ratings), 2)
+
     return render_template('index.html', total_contacts_all=total_contacts_all, total_contacts=total_contacts, avg_rating=avg_rating, avg_rating_all=avg_rating_all)
 
 @app.route('/contacts')
@@ -112,7 +125,7 @@ def allContacts():
 @app.route('/contact/add', methods=['GET', 'POST'])
 @login_required
 def add_contact():
-    db.session.rollback()  # Clear any existing session state
+    # db.session.rollback()  # Clear any existing session state
     if request.method == 'POST':
         name = request.form['name']
         email = request.form['email'] or None
@@ -134,6 +147,38 @@ def add_contact():
         )
         db.session.add(contact)
         db.session.commit()
+
+        # send email notification if email is provided
+        if email:
+            try:
+                sender_email = os.environ.get('SENDER_EMAIL')
+                sender_password = os.environ.get('SENDER_PASSWORD')
+
+                msg = MIMEMultipart()
+                msg['From'] = sender_email
+                msg['To'] = email
+                msg['Subject'] = "Generation Islam - Follow Up"
+
+                body = "Assalamu Alaikum,\n\nIt was nice speaking with you at one of the Generation Islam booths ran by "\
+                        "Hizb Ut Tahrir. Here are some useful links and documents to check out which are relevant to "\
+                        "what we discussed.\n\n"\
+                        "Central Media Office of HT: https://www.hizb-ut-tahrir.info/\n"\
+                        "Literature of HT: https://www.hizb-ut-tahrir.info/en/index.php/latest-articles/16477.html\n"\
+                        "Membership in HT: https://www.hizb-ut-tahrir.info/en/index.php/latest-articles/7983.html\n"\
+                        "HT's Work: https://www.hizb-ut-tahrir.info/en/index.php/definition-of-ht/item/7984-hizb-ut-tahrir%E2%80%99s-work"\
+                        "\n\nPlease don't hesitate to reach out if you have any questions "\
+                        "or want to further discuss something.\n\nBest regards,\nHizb Ut Tahrir - America"
+                msg.attach(MIMEText(body, 'plain'))
+
+                server = smtplib.SMTP('smtp.gmail.com', 587)
+                server.starttls()
+                server.login(sender_email, sender_password)
+                server.send_message(msg)
+                server.quit()
+            except Exception as e:
+                app.logger.error(f"Failed to send email: {e}")
+                flash('Failed to send email notification.', 'warning')
+                
         flash('Contact added!', 'success')
         return redirect(url_for('contacts'))
     
