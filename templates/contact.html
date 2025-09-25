@@ -15,7 +15,7 @@
             {% endwith %}
 
             <h2>{{ action }} Contact</h2>
-            <form method="post">
+            <form method="post" id="contactForm">
                 <div class="my-3">
                     <label for="name" class="form-label">Name</label>
                     <input type="text" class="form-control shadow" id="name" name="name" required value="{{ contact.name or name or '' }}">
@@ -37,7 +37,9 @@
                     <textarea class="form-control shadow" id="comments" name="comments">{{ contact.comments or comments or '' }}</textarea>
                 </div>
 
-                <button type="submit" class="btn btn-primary me-2">{{ action }} Contact</button>
+                <button type="submit" class="btn btn-primary me-2" id="submitBtn">
+                    <span role="status">{{ action }} Contact</span>
+                </button>
                 <button type="button" class="btn btn-secondary" onclick="window.location.href='{{ url_for('contacts') }}';" >Back To Contacts</button>
             </form>
         </div>
@@ -47,6 +49,11 @@
 {% block scripts %}
     <script>
         const phone = document.getElementById("phone");
+        const submitBtn = document.getElementById("submitBtn");
+        const form = document.getElementById("contactForm");
+        const spinner = document.createElement("span");
+        spinner.classList.add("spinner-border", "spinner-border-sm");
+        spinner.setAttribute("aria-hidden", "true");
 
         phone.addEventListener("input", function () {
             this.setCustomValidity("");
@@ -58,6 +65,11 @@
             }else {
                 this.setCustomValidity("Phone number must be exactly 10 digits.");
             }
+        });
+
+        form.addEventListener("submit", function () {
+            submitBtn.prepend(spinner);
+            submitBtn.disabled = true;
         });
     </script>
 {% endblock %}
