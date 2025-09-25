@@ -161,7 +161,11 @@ def add_contact():
 
                 body = "Assalamu Alaikum,\n\nIt was nice speaking with you at one of the Generation Islam booths ran by "\
                         "Hizb Ut Tahrir. Here are some useful links and documents to check out which are relevant to "\
-                        "what we discussed.\n\n"\
+                        "what we discussed, and also links to our social media. We'd be grateful if you can give us a follow.\n\n"\
+                        "Generation Islam Instagram: https://www.instagram.com/generation_islam?igsh=MXZ4Y2E3eTJpMXpkZw==\n"\
+                        "Generation Islam TikTok: \n"\
+                        "Generation Islam X (Twitter): \n"\
+                        "Generation Islam Telegram: https://t.me/generation_islam\n\n"\
                         "Central Media Office of HT: https://www.hizb-ut-tahrir.info/\n"\
                         "Literature of HT: https://www.hizb-ut-tahrir.info/en/index.php/latest-articles/16477.html\n"\
                         "Membership in HT: https://www.hizb-ut-tahrir.info/en/index.php/latest-articles/7983.html\n"\
