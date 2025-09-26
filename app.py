@@ -154,8 +154,8 @@ def add_contact():
                 sender_email = os.environ.get('SENDER_EMAIL')
                 sender_password = os.environ.get('SENDER_PASSWORD')
 
-                flash(f"Sending from {sender_email}", "info")
-                flash(f"password is {sender_password}", "info")
+                # flash(f"Sending from {sender_email}", "info")
+                # flash(f"password is {sender_password}", "info")
 
                 # msg = MIMEMultipart()
                 # msg['From'] = sender_email
