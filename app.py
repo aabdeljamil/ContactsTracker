@@ -34,7 +34,7 @@ client_config = {
     "web": {
         "client_id": os.environ['GOOGLE_CLIENT_ID'],
         "client_secret": os.environ['GOOGLE_CLIENT_SECRET'],
-        "redirect_uris": [url_for('oauth2callback', _external=True)],
+        "redirect_uris": [os.environ['GOOGLE_REDIRECT_URI']],
         "auth_uri": "https://accounts.google.com/o/oauth2/auth",
         "token_uri": "https://oauth2.googleapis.com/token"
     }
