@@ -16,7 +16,7 @@ app.secret_key = os.environ.get('SECRET_KEY', 'secret123')
 
 ###################################################################################################################
 # Set to True for local development/testing, False for production
-isTesting = True
+isTesting = False
 ###################################################################################################################
 
 if isTesting:
