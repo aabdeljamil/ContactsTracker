@@ -153,6 +153,7 @@ def add_contact():
             try:
                 sender_email = os.environ.get('SENDER_EMAIL')
                 sender_password = os.environ.get('SENDER_PASSWORD')
+                send_grid_api_key = os.environ.get('SENDGRID_API_KEY')
 
                 msg = MIMEMultipart()
                 msg['From'] = sender_email
@@ -174,9 +175,9 @@ def add_contact():
                         "or want to further discuss something.\n\nBest regards,\nHizb Ut Tahrir - America"
                 msg.attach(MIMEText(body, 'plain'))
 
-                server = smtplib.SMTP('smtp.gmail.com', 465)
+                server = smtplib.SMTP('smtp.sendgrid.net', 587)
                 server.starttls()
-                server.login(sender_email, sender_password)
+                server.login('apikey', send_grid_api_key)
                 server.send_message(msg)
                 server.quit()
             except Exception as e:
