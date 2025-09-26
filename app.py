@@ -4,9 +4,8 @@ from models import db, Contact, User
 from flask_login import LoginManager, login_user, login_required, logout_user, current_user, UserMixin
 from flask_migrate import Migrate
 from sqlalchemy import desc, asc
-import smtplib
-from email.mime.text import MIMEText
-from email.mime.multipart import MIMEMultipart
+from sendgrid import SendGridAPIClient
+from sendgrid.helpers.mail import Mail
 
 app = Flask(__name__)
 app.secret_key = os.environ.get('SECRET_KEY', 'your-secret-key')
@@ -150,38 +149,35 @@ def add_contact():
 
         # send email notification if email is provided
         if email:
+            sender_email = os.environ.get('SENDER_EMAIL')
+            sender_password = os.environ.get('SENDER_PASSWORD')
+            send_grid_api_key = os.environ.get('SENDGRID_API_KEY')
+
+            message = Mail(
+                from_email=sender_email,
+                to_emails=email,
+                subject="Generation Islam - Follow Up",
+                html_content="Assalamu Alaikum,\n\nIt was nice speaking with you at one of the Generation Islam booths ran by "\
+                            "Hizb Ut Tahrir. Here are some useful links and documents to check out which are relevant to "\
+                            "what we discussed, and also links to our social media. We'd be grateful if you can give us a follow.\n\n"\
+                            "Generation Islam Instagram: https://www.instagram.com/generation_islam\n"\
+                            "Generation Islam TikTok: https://www.tiktok.com/@generation_islam\n"\
+                            "Generation Islam X (Twitter): https://x.com/Gen_Islam2025\n"\
+                            "Generation Islam Telegram: https://t.me/generation_islam\n\n"\
+                            "Central Media Office of HT: https://www.hizb-ut-tahrir.info/\n"\
+                            "Literature of HT: https://www.hizb-ut-tahrir.info/en/index.php/latest-articles/16477.html\n"\
+                            "Membership in HT: https://www.hizb-ut-tahrir.info/en/index.php/latest-articles/7983.html\n"\
+                            "HT's Work: https://www.hizb-ut-tahrir.info/en/index.php/definition-of-ht/item/7984-hizb-ut-tahrir%E2%80%99s-work"\
+                            "\n\nPlease don't hesitate to reach out if you have any questions "\
+                            "or want to further discuss something.\n\nBest regards,\nHizb Ut Tahrir - America"
+            )
+
             try:
-                sender_email = os.environ.get('SENDER_EMAIL')
-                sender_password = os.environ.get('SENDER_PASSWORD')
-                send_grid_api_key = os.environ.get('SENDGRID_API_KEY')
-
-                msg = MIMEMultipart()
-                msg['From'] = sender_email
-                msg['To'] = email
-                msg['Subject'] = "Generation Islam - Follow Up"
-
-                body = "Assalamu Alaikum,\n\nIt was nice speaking with you at one of the Generation Islam booths ran by "\
-                        "Hizb Ut Tahrir. Here are some useful links and documents to check out which are relevant to "\
-                        "what we discussed, and also links to our social media. We'd be grateful if you can give us a follow.\n\n"\
-                        "Generation Islam Instagram: https://www.instagram.com/generation_islam\n"\
-                        "Generation Islam TikTok: https://www.tiktok.com/@generation_islam\n"\
-                        "Generation Islam X (Twitter): https://x.com/Gen_Islam2025\n"\
-                        "Generation Islam Telegram: https://t.me/generation_islam\n\n"\
-                        "Central Media Office of HT: https://www.hizb-ut-tahrir.info/\n"\
-                        "Literature of HT: https://www.hizb-ut-tahrir.info/en/index.php/latest-articles/16477.html\n"\
-                        "Membership in HT: https://www.hizb-ut-tahrir.info/en/index.php/latest-articles/7983.html\n"\
-                        "HT's Work: https://www.hizb-ut-tahrir.info/en/index.php/definition-of-ht/item/7984-hizb-ut-tahrir%E2%80%99s-work"\
-                        "\n\nPlease don't hesitate to reach out if you have any questions "\
-                        "or want to further discuss something.\n\nBest regards,\nHizb Ut Tahrir - America"
-                msg.attach(MIMEText(body, 'plain'))
-
-                server = smtplib.SMTP('smtp.sendgrid.net', 587)
-                server.starttls()
-                server.login('apikey', send_grid_api_key)
-                server.send_message(msg)
-                server.quit()
+                sg = SendGridAPIClient(send_grid_api_key)
+                response = sg.send(message)
+                app.logger.info(f"Email sent to {email}, status code: {response.status_code}")
             except Exception as e:
-                app.logger.error(f"Failed to send email: {e}")
+                app.logger.error(f"Failed to send email via SendGrid: {e}")
                 flash('Failed to send email notification.', 'warning')
                 
         flash('Contact added!', 'success')
