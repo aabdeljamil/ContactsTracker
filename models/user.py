@@ -10,6 +10,12 @@ class User(db.Model):
     is_admin = db.Column(db.Boolean, default=False, nullable=False)
     contacts = db.relationship('Contact', backref='user', lazy=True)
 
+    def avg_rating(self):
+        ratings = [contact.rating for contact in self.contacts if contact.rating is not None]
+        if ratings:
+            return round(sum(ratings) / len(ratings), 2)
+        return None
+
     def set_password(self, password):
         self.password_hash = generate_password_hash(password)
 

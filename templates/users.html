@@ -1,0 +1,56 @@
+{% extends 'base.html' %}
+
+{% block title %}All Users{% endblock %}
+
+{% block content %}
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% for category, message in messages %}
+            <div class="alert alert-{{ category }} alert-dismissible fade show mt-3">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        {% endfor %}
+    {% endwith %}
+
+    <h1 class="mb-4">All Users</h1>
+
+    {% if users|length == 0 %}
+        <div class="alert alert-info">
+            No users found.
+        </div>
+    {% else %}
+        <div class="table-responsive">
+            <table class="table table-striped table-hover table-bordered">
+                <thead class="table-primary">
+                    <tr>
+                        <th scope="col">Name</th>
+                        <th scope="col">No. of Contacts</th>
+                        <th scope="col">Avg. Rating</th>
+                        <th scope="col">Admin</th>
+                        <th scope="col">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for user in users %}
+                    <tr>
+                        <td>{{ user.username }}</td>
+                        <td>{{ user.contacts|length }}</td>
+                        <td>{{ user.avg_rating() }}</td>
+                        <td>{{ 'Yes' if user.is_admin else 'No' }}</td>
+                        <td>
+                            <div style="display: flex; justify-content: center;">
+                                <form method="post" action="{{ url_for('toggle_admin', user_id=user.id) }}" style="display:inline;" class="me-3">
+                                    <button type="submit" class="btn btn-sm btn-warning">Toggle Admin</button>
+                                </form>
+                                <form method="post" action="{{ url_for('delete_user', user_id=user.id) }}" style="display:inline;" onsubmit="return confirm('Are you sure you want to delete this user? This action cannot be undone.');">
+                                    <button type="submit" class="btn btn-sm btn-danger">Delete</button>
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% endif %}
+{% endblock %}

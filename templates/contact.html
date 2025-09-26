@@ -16,8 +16,48 @@
 
             <h2>{{ action }} Contact</h2>
             <form method="post" id="contactForm">
+                <h4 class="mt-4">Survey</h4>
                 <div class="my-3">
-                    <label for="name" class="form-label">Name</label>
+                    <div class="mb-3">
+                        <label for="question1" class="form-label">Do you think that the genocide in Gaza is a Muslim issue?</label>
+                        <div>
+                            <input class="form-check-input" type="radio" name="question1" value="yes"> Yes
+                            <input class="form-check-input ms-2" type="radio" name="question1" value="no"> No
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="question2" class="form-label">Do you think the Ummah is capable of uniting under one state that rules according the laws of Allah (swt)?</label>
+                        <div>
+                            <input class="form-check-input" type="radio" name="question2" value="yes"> Yes
+                            <input class="form-check-input ms-2" type="radio" name="question2" value="no"> No
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="question3" class="form-label">Question 3</label>
+                        <div>
+                            <input class="form-check-input" type="radio" name="question3" value="yes"> Yes
+                            <input class="form-check-input ms-2" type="radio" name="question3" value="no"> No
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="question4" class="form-label">Question 4</label>
+                        <div>
+                            <input class="form-check-input" type="radio" name="question4" value="yes"> Yes
+                            <input class="form-check-input ms-2" type="radio" name="question4" value="no"> No
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="question5" class="form-label">Question 5</label>
+                        <div>
+                            <input class="form-check-input" type="radio" name="question5" value="yes"> Yes
+                            <input class="form-check-input ms-2" type="radio" name="question5" value="no"> No
+                        </div>
+                    </div>
+                </div>
+
+                <h4 class="mt-4">Contact Information</h4>
+                <div class="my-3">
+                    <label for="name" class="form-label">Name<span style="color: red;"> *</span></label>
                     <input type="text" class="form-control shadow" id="name" name="name" required value="{{ contact.name or name or '' }}">
                 </div>
                 <div class="mb-3">
@@ -29,7 +69,7 @@
                     <input type="text" pattern="\d{10}" class="form-control shadow" id="phone" name="phone" value="{{ contact.phone or phone or '' }}">
                 </div>
                 <div class="mb-3">
-                    <label for="rating" class="form-label">Rating (1-5)</label>
+                    <label for="rating" class="form-label">Rating (5 is highest, 1 is lowest.)</label>
                     <input type="number" class="form-control shadow" id="rating" name="rating" min="1" max="5" value="{{ contact.rating or rating or '' }}">
                 </div>
                 <div class="mb-3">
