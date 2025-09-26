@@ -1,6 +1,6 @@
 {% extends 'base.html' %}
 
-{% block title %}All Contacts{% endblock %}
+{% block title %}{{ title }}{% endblock %}
 
 {% block content %}
     {% with messages = get_flashed_messages(with_categories=true) %}
@@ -12,11 +12,11 @@
         {% endfor %}
     {% endwith %}
 
-    <h1 class="mb-4">All Contacts</h1>
+    <h1 class="mb-4">{{ title }}</h1>
 
     {% if contacts|length == 0 %}
         <div class="alert alert-info">
-            No contacts found. To add contacts, please navigate to "My Contacts."
+            No contacts found.
         </div>
     {% else %}
         <div class="table-responsive">
@@ -28,7 +28,9 @@
                         <th scope="col">Phone</th>
                         <th scope="col">Rating</th>
                         <th scope="col">Comments</th>
-                        <th scope="col">User</th>
+                        {% if title == 'All Contacts' %}
+                            <th scope="col">User</th>
+                        {% endif %}
                     </tr>
                 </thead>
                 <tbody>
@@ -39,7 +41,9 @@
                         <td>{{ contact.phone }}</td>
                         <td>{{ contact.rating }}</td>
                         <td>{{ contact.comments }}</td>
-                        <td>{{ contact.user.username }}</td>
+                        {% if title == 'All Contacts' %}
+                            <td>{{ contact.user.username }}</td>
+                        {% endif %}
                     </tr>
                     {% endfor %}
                 </tbody>

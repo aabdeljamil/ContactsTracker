@@ -9,36 +9,42 @@ import base64
 from email.mime.text import MIMEText
 from google_auth_oauthlib.flow import Flow
 from googleapiclient.discovery import build
+from googleapiclient.errors import HttpError
 
 app = Flask(__name__)
-app.secret_key = os.environ.get('SECRET_KEY', 'your-secret-key')
+app.secret_key = os.environ.get('SECRET_KEY', 'secret123')
 
 ###################################################################################################################
-# Database configuration for local development.
-# os.environ['OAUTHLIB_INSECURE_TRANSPORT'] = '1'
-# connString = ''
-# with open('dbConnectionString.txt') as stream:
-#     connString = stream.readline()
-# app.config['SQLALCHEMY_DATABASE_URI'] = connString
+# Set to True for local development/testing, False for production
+isTesting = True
 ###################################################################################################################
 
-###################################################################################################################
-# Database configuration for production (PostgreSQL)
-app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get("DATABASE_URL")
-###################################################################################################################
+if isTesting:
+    debug = True
+    os.environ['OAUTHLIB_INSECURE_TRANSPORT'] = '1'
+    CLIENT_SECRETS_FILE = 'client_secret_831213249565-usq2ual4ma5dhsmg01j6lnoa80r7gmoj.apps.googleusercontent.com.json'
+    connString = ''
+    try:
+        with open('dbConnectionString.txt') as stream:
+            connString = stream.readline()
+    except FileNotFoundError:
+        print("dbConnectionString.txt file not found. Please create the file with the database connection string.")
+    app.config['SQLALCHEMY_DATABASE_URI'] = connString
+else:
+    debug = False
+    client_config = {
+        "web": {
+            "client_id": os.environ.get('GOOGLE_CLIENT_ID'),
+            "client_secret": os.environ.get('GOOGLE_CLIENT_SECRET'),
+            "redirect_uris": [os.environ.get('GOOGLE_REDIRECT_URI')],
+            "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+            "token_uri": "https://oauth2.googleapis.com/token"
+        }
+    }
+    app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get("DATABASE_URL")
 
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 SCOPES = ['https://www.googleapis.com/auth/gmail.send']
-CLIENT_SECRETS_FILE = 'client_secret_831213249565-usq2ual4ma5dhsmg01j6lnoa80r7gmoj.apps.googleusercontent.com.json'
-client_config = {
-    "web": {
-        "client_id": os.environ['GOOGLE_CLIENT_ID'],
-        "client_secret": os.environ['GOOGLE_CLIENT_SECRET'],
-        "redirect_uris": [os.environ['GOOGLE_REDIRECT_URI']],
-        "auth_uri": "https://accounts.google.com/o/oauth2/auth",
-        "token_uri": "https://oauth2.googleapis.com/token"
-    }
-}
 
 db.init_app(app)
 migrate = Migrate(app, db)
@@ -53,21 +59,25 @@ login_manager.login_view = 'login'
 def load_user(user_id):
     return User.query.get(int(user_id))
 
+###############################################################
+# OAuth 2.0 Authorization Routes
+# One-time setup to get the token.pickle file
+# Visit /authorize to authorize the app and generate token.pickle
+###############################################################
 @app.route('/authorize')
 def authorize():
-    # Testing
-    # flow = Flow.from_client_secrets_file(
-    #     CLIENT_SECRETS_FILE,
-    #     scopes=SCOPES,
-    #     redirect_uri=url_for('oauth2callback', _external=True)
-    # )
-
-    # Production
-    flow = Flow.from_client_config(
-        client_config,
-        scopes=SCOPES,
-        redirect_uri=url_for('oauth2callback', _external=True)
-    )
+    if (isTesting == True):
+        flow = Flow.from_client_secrets_file(
+            CLIENT_SECRETS_FILE,
+            scopes=SCOPES,
+            redirect_uri=url_for('oauth2callback', _external=True)
+        )
+    else:
+        flow = Flow.from_client_config(
+            client_config,
+            scopes=SCOPES,
+            redirect_uri=url_for('oauth2callback', _external=True)
+        )
     
     auth_url, state = flow.authorization_url(
         access_type='offline',
@@ -77,25 +87,28 @@ def authorize():
     session['state'] = state
     return redirect(auth_url)
 
+###################################################
+# OAuth 2.0 Callback Route
+# This route handles the OAuth 2.0 callback and stores the credentials.
+###################################################
 @app.route('/oauth2callback')
 def oauth2callback():
     state = session['state']
 
-    # Testing
-    # flow = Flow.from_client_secrets_file(
-    #     CLIENT_SECRETS_FILE,
-    #     scopes=SCOPES,
-    #     state=state,
-    #     redirect_uri=url_for('oauth2callback', _external=True)
-    # )
-
-    # Production
-    flow = Flow.from_client_config(
-        client_config,
-        scopes=SCOPES,
-        state=state,
-        redirect_uri=url_for('oauth2callback', _external=True)
-    )
+    if (isTesting == True):
+        flow = Flow.from_client_secrets_file(
+            CLIENT_SECRETS_FILE,
+            scopes=SCOPES,
+            state=state,
+            redirect_uri=url_for('oauth2callback', _external=True)
+        )
+    else:
+        flow = Flow.from_client_config(
+            client_config,
+            scopes=SCOPES,
+            state=state,
+            redirect_uri=url_for('oauth2callback', _external=True)
+        )
 
     flow.fetch_token(authorization_response=request.url)
     creds = flow.credentials
@@ -105,6 +118,9 @@ def oauth2callback():
 
     return 'Authorization successful! You can now send emails.'
 
+###################################################
+# Function to send email using Gmail API
+###################################################
 def send_email(to_email, subject, html_content):
     with open('token.pickle', 'rb') as token:
         creds = pickle.load(token)
@@ -114,8 +130,19 @@ def send_email(to_email, subject, html_content):
     message['from'] = creds._client_id  # or your Gmail address
     message['subject'] = subject
     raw_message = base64.urlsafe_b64encode(message.as_bytes()).decode()
-    service.users().messages().send(userId='me', body={'raw': raw_message}).execute()
+    try:
+        service.users().messages().send(userId='me', body={'raw': raw_message}).execute()
+    except HttpError as error:
+        if error.resp.status in [403, 429]:
+            app.logger.error("Quota exceeded. Try again tomorrow or use a different sender account.")
+            flash('Email quota exceeded. Email not sent.', 'warning')
+        else:
+            app.logger.error(f"An error occurred: {error}")
+            flash('Failed to send email.', 'danger')
 
+#####################################################
+# Route for user login
+#####################################################
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
@@ -131,12 +158,18 @@ def login():
 
     return render_template('login.html')
 
+#####################################################
+# Route for user logout
+#####################################################
 @app.route('/logout')
 @login_required
 def logout():
     logout_user()
     return redirect(url_for('login'))
 
+#####################################################
+# Route for user registration
+#####################################################
 @app.route('/register', methods=['GET', 'POST'])
 def register():
     if request.method == 'POST':
@@ -162,6 +195,9 @@ def register():
         return redirect(url_for('login'))
     return render_template('register.html')
 
+#####################################################
+# Route for the home page
+#####################################################
 @app.route('/')
 @login_required
 def index():
@@ -181,12 +217,18 @@ def index():
 
     return render_template('index.html', total_contacts_all=total_contacts_all, total_contacts=len(contacts), avg_rating=current_user.avg_rating(), avg_rating_all=avg_rating_all)
 
+######################################################
+# Route for managing your contacts
+######################################################
 @app.route('/contacts')
 @login_required
 def contacts():
     contacts = Contact.query.filter_by(user_id=current_user.id).order_by(desc(Contact.id)).all()
     return render_template('contacts.html', contacts=contacts)
 
+######################################################
+# Route for managing all contacts (admin only)
+######################################################
 @app.route('/allcontacts')
 @login_required
 def allContacts():
@@ -196,8 +238,11 @@ def allContacts():
         flash('You do not have permission to view all contacts.', 'danger')
         return redirect(url_for('index'))
     
-    return render_template('allContacts.html', contacts=contacts)
+    return render_template('allContacts.html', contacts=contacts, title="All Contacts")
 
+######################################################
+# Route for managing users (admin only)
+######################################################
 @app.route('/users')
 @login_required
 def users():
@@ -209,6 +254,23 @@ def users():
     
     return render_template('users.html', users=users)
 
+#######################################################
+# Route for viewing a specific user's contacts (admin only)
+#######################################################
+@app.route('/user/<int:user_id>/contacts')
+@login_required
+def user_contacts(user_id):
+    if not current_user.is_admin:
+        flash('You do not have permission to view this page.', 'danger')
+        return redirect(url_for('index'))
+    
+    user = User.query.get_or_404(user_id)
+    contacts = Contact.query.filter_by(user_id=user.id).order_by(asc(Contact.id)).all()
+    return render_template('allContacts.html', contacts=contacts, title=f"Contacts of {user.username}")
+
+#######################################################
+# Route for deleting a user (admin only)
+#######################################################
 @app.route('/user/delete/<int:user_id>', methods=['POST'])
 @login_required
 def delete_user(user_id):
@@ -230,6 +292,9 @@ def delete_user(user_id):
     flash('User deleted successfully.', 'success')
     return redirect(url_for('users'))
 
+#######################################################
+# Route for toggling a user's admin status (admin only)
+#######################################################
 @app.route('/user/toggle_admin/<int:user_id>', methods=['POST'])
 @login_required
 def toggle_admin(user_id):
@@ -247,6 +312,9 @@ def toggle_admin(user_id):
     flash(f"User '{user.username}' admin status changed to {'Admin' if user.is_admin else 'User'}.", 'success')
     return redirect(url_for('users'))
 
+#######################################################
+# Route for adding contacts
+#######################################################
 @app.route('/contact/add', methods=['GET', 'POST'])
 @login_required
 def add_contact():
@@ -301,6 +369,9 @@ def add_contact():
     
     return render_template('contact.html', action="Add", contact={})
 
+#######################################################
+# Route for editing contacts
+#######################################################
 @app.route('/contact/edit/<int:contact_id>', methods=['GET', 'POST'])
 @login_required
 def edit_contact(contact_id):
@@ -322,6 +393,9 @@ def edit_contact(contact_id):
         
     return render_template('contact.html', action="Edit", contact=contact)
 
+#######################################################
+# Route for deleting contacts
+#######################################################
 @app.route("/contact/delete/<int:contact_id>", methods=["GET", "POST"])
 def delete_contact(contact_id):
     contact = Contact.query.get_or_404(contact_id)
@@ -330,10 +404,16 @@ def delete_contact(contact_id):
     flash("Contact deleted successfully!", "success")
     return redirect(url_for("contacts"))
 
+#######################################################
+# Error Handler for 404 Not Found Error
+#######################################################
 @app.errorhandler(404)
 def not_found(e):
     return render_template("404.html"), 404
 
+#######################################################
+# Error Handler for 500 Internal Server Error
+#######################################################
 @app.errorhandler(Exception)
 def handle_exception(e):
     # Log the exception
@@ -342,4 +422,4 @@ def handle_exception(e):
     return render_template('error.html', error=str(e)), 500
 
 if __name__ == '__main__':
-    app.run()
+    app.run(debug=debug)
