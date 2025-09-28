@@ -9,6 +9,7 @@ import base64
 from email.mime.text import MIMEText
 from google_auth_oauthlib.flow import Flow
 from googleapiclient.discovery import build
+from google.auth.transport.requests import Request
 from googleapiclient.errors import HttpError
 
 app = Flask(__name__)
@@ -81,7 +82,8 @@ def authorize():
     
     auth_url, state = flow.authorization_url(
         access_type='offline',
-        include_granted_scopes='true'
+        include_granted_scopes='true',
+        prompt='consent'
     )
 
     session['state'] = state
@@ -116,15 +118,38 @@ def oauth2callback():
     with open('token.pickle', 'wb') as token:
         pickle.dump(creds, token)
 
-    return 'Authorization successful! You can now send emails.'
+    flash('Authorization successful! You can now send emails.', 'success')
+    return redirect(url_for('index'))
+
+def get_gmail_service():
+    creds = None
+    
+    # Load saved credentials
+    if os.path.exists("token.pickle"):
+        with open("token.pickle", "rb") as token:
+            creds = pickle.load(token)
+
+    # If no (valid) credentials, redirect user to authorize
+    if not creds or not creds.valid:
+        if creds and creds.expired and creds.refresh_token:
+            creds.refresh(Request())
+            # Save refreshed creds
+            with open("token.pickle", "wb") as token:
+                pickle.dump(creds, token)
+        else:
+            # No creds at all → need /authorize flow
+            return None
+
+    return build("gmail", "v1", credentials=creds), creds
 
 ###################################################
 # Function to send email using Gmail API
 ###################################################
 def send_email(to_email, subject, html_content):
-    with open('token.pickle', 'rb') as token:
-        creds = pickle.load(token)
-    service = build('gmail', 'v1', credentials=creds)
+    service, creds = get_gmail_service()
+    if not service:
+        return redirect(url_for('authorize'))
+    
     message = MIMEText(html_content, 'html')
     message['to'] = to_email
     message['from'] = creds._client_id  # or your Gmail address
