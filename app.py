@@ -138,21 +138,21 @@ def get_gmail_service():
                 pickle.dump(creds, token)
         else:
             # No creds at all → need /authorize flow
-            return None, None
+            return None
 
-    return build("gmail", "v1", credentials=creds), creds
+    return build("gmail", "v1", credentials=creds)
 
 ###################################################
 # Function to send email using Gmail API
 ###################################################
 def send_email(to_email, subject, html_content):
-    service, creds = get_gmail_service()
+    service = get_gmail_service()
     if not service:
         return redirect(url_for('authorize'))
     
     message = MIMEText(html_content, 'html')
     message['to'] = to_email
-    message['from'] = creds._client_id  # or your Gmail address
+    message['from'] = 'generation.islam.ht@gmail.com'  # or your Gmail address
     message['subject'] = subject
     raw_message = base64.urlsafe_b64encode(message.as_bytes()).decode()
     try:
