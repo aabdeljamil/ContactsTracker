@@ -138,7 +138,7 @@ def get_gmail_service():
                 pickle.dump(creds, token)
         else:
             # No creds at all → need /authorize flow
-            return None
+            return None, None
 
     return build("gmail", "v1", credentials=creds), creds
 
