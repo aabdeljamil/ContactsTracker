@@ -121,6 +121,10 @@ def oauth2callback():
     flash('Authorization successful! You can now send emails.', 'success')
     return redirect(url_for('index'))
 
+###################################################
+# Function to get Gmail service
+# DOn't use
+###################################################
 def get_gmail_service():
     creds = None
     
@@ -146,13 +150,12 @@ def get_gmail_service():
 # Function to send email using Gmail API
 ###################################################
 def send_email(to_email, subject, html_content):
-    service = get_gmail_service()
-    if not service:
-        return redirect(url_for('authorize'))
-    
+    with open('token.pickle', 'rb') as token:
+        creds = pickle.load(token)
+    service = build('gmail', 'v1', credentials=creds)
     message = MIMEText(html_content, 'html')
     message['to'] = to_email
-    message['from'] = 'generation.islam.ht@gmail.com'  # or your Gmail address
+    message['from'] = creds._client_id  # or your Gmail address
     message['subject'] = subject
     raw_message = base64.urlsafe_b64encode(message.as_bytes()).decode()
     try:
