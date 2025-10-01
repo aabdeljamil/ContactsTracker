@@ -410,7 +410,7 @@ def add_contact():
         flash('Contact added!', 'success')
         return redirect(url_for('contacts'))
     
-    return render_template('contact.html', action="Add", contact={})
+    return render_template('contact.html', action="Add", contact={}, questions=questions)
 
 #######################################################
 # Route for editing contacts
