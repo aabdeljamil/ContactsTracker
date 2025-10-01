@@ -20,80 +20,15 @@
                     <h4 class="mt-4">Survey</h4>
                     <div class="my-3">
                         {% for question in questions %}
-                            <div class="mb-3">
+                            <div class="mb-2">
                                 <label for="q_{{ question.id }}" class="form-label">{{ question.text }}</label>
                                 <div>
                                     {% for choice in question.choices %}
-                                        <input class="form-check-input" type="radio" name="q_{{ question.id }}" value="{{ choice.text }}">{{ choice.text }}<br>
+                                        <input class="form-check-input me-2 mb-2" type="radio" name="q_{{ question.id }}" value="{{ choice.text }}">{{ choice.text }}<br>
                                     {% endfor %}
                                 </div>
                             </div>
                         {% endfor %}
-                        <!-- <div class="mb-3">
-                            <label for="question1" class="form-label">Do you think that the genocide in Gaza is a Muslim issue or a Palestinean issue?</label>
-                            <div>
-                                <input class="form-check-input" type="radio" name="question1" value="yes"> Muslim issue
-                                <input class="form-check-input ms-2" type="radio" name="question1" value="no"> Palestinean issue
-                            </div>
-                        </div>
-                        <div class="mb-3">
-                            <label for="question2" class="form-label">Do Muslims today have the capacity to liberate all of Palestine (including Gaza)? </label>
-                            <div>
-                                <input class="form-check-input" type="radio" name="question2" value="yes"> Yes
-                                <input class="form-check-input ms-2" type="radio" name="question2" value="no"> No
-                            </div>
-                        </div>
-                        <div class="mb-3">
-                            <label for="question3" class="form-label">What's preventing Muslims from freeing Palestine?</label>
-                            <div style="display: flex;">
-                                <input class="form-check-input" type="radio" name="question3" value="yes"> They simply don't care
-                                <input class="form-check-input ms-2" type="radio" name="question3" value="no"> Opressive ruling systems and puppet rulers
-                                <input class="form-check-input" type="radio" name="question3" value="yes"> Lack of education and technology
-                                <input class="form-check-input ms-2" type="radio" name="question3" value="no"> Lack of praying, fasting, and dua
-                            </div>
-                        </div>
-                        <div class="mb-3">
-                            <label for="question4" class="form-label">Do you think the Ummah is capable of uniting under one state that rules according to the laws of Allah (swt)?</label>
-                            <div>
-                                <input class="form-check-input" type="radio" name="question4" value="yes"> Yes
-                                <input class="form-check-input ms-2" type="radio" name="question4" value="no"> No
-                            </div>
-                        </div>
-                        <div class="mb-3">
-                            <label for="question5" class="form-label">Will you support an Islamic ruling system in a Khilafah state in the Muslim world?</label>
-                            <div>
-                                <input class="form-check-input" type="radio" name="question5" value="yes"> Yes
-                                <input class="form-check-input ms-2" type="radio" name="question5" value="no"> No
-                            </div>
-                        </div>
-                        <div class="mb-3">
-                            <label for="question6" class="form-label">Do you think America and the West will try to stop it?</label>
-                            <div>
-                                <input class="form-check-input" type="radio" name="question6" value="yes"> Yes
-                                <input class="form-check-input ms-2" type="radio" name="question6" value="no"> No
-                            </div>
-                        </div>
-                        <div class="mb-3">
-                            <label for="question7" class="form-label">Do you think the attack on Gaza and Palestine is part of the war on Islam?</label>
-                            <div>
-                                <input class="form-check-input" type="radio" name="question7" value="yes"> Yes
-                                <input class="form-check-input ms-2" type="radio" name="question7" value="no"> No
-                            </div>
-                        </div>
-                        <div class="mb-3">
-                            <label for="question8" class="form-label">Do you think the Muslims will win this war?</label>
-                            <div>
-                                <input class="form-check-input" type="radio" name="question8" value="yes"> Yes
-                                <input class="form-check-input ms-2" type="radio" name="question8" value="no"> No
-                            </div>
-                        </div>
-                        <div class="mb-3">
-                            <label for="question9" class="form-label">Do you think you have a responsibility to fulfill in this struggle?</label>
-                            <div>
-                                <input class="form-check-input" type="radio" name="question9" value="yes"> Yes
-                                <input class="form-check-input ms-2" type="radio" name="question9" value="no"> No
-                            </div>
-                        </div> -->
                     </div>
                 {% endif %}
 

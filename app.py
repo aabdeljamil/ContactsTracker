@@ -349,7 +349,7 @@ def toggle_admin(user_id):
 @login_required
 def add_contact():
     # db.session.rollback()  # Clear any existing session state
-    questions = SurveyQuestion.query.all()
+    questions = SurveyQuestion.query.order_by(asc(SurveyQuestion.id)).all()
 
     if request.method == 'POST':
         name = request.form['name']
@@ -446,6 +446,36 @@ def delete_contact(contact_id):
     db.session.commit()
     flash("Contact deleted successfully!", "success")
     return redirect(url_for("contacts"))
+
+#######################################################
+# Route for survey report (admin only)
+#######################################################
+@app.route('/surveyReport')
+@login_required
+def surveyReport():
+    if not current_user.is_admin:
+        flash('You do not have permission to view this page.', 'danger')
+        return redirect(url_for('index'))
+    
+    questions = SurveyQuestion.query.order_by(asc(SurveyQuestion.id)).all()
+    report_data = []
+
+    for question in questions:
+        choices = {choice.text: 0 for choice in question.choices}
+        responses = SurveyResponse.query.filter_by(question_id=question.id).all()
+        total_responses = len(responses)
+
+        for response in responses:
+            if response.answer in choices:
+                choices[response.answer] += 1
+
+        report_data.append({
+            'question': question.text,
+            'choices': choices,
+            'total_responses': total_responses
+        })
+
+    return render_template('surveyReport.html', report_data=report_data)
 
 #######################################################
 # Error Handler for 404 Not Found Error

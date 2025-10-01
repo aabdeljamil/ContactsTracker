@@ -1,0 +1,68 @@
+{% extends 'base.html' %}
+
+{% block title %}Survey Report{% endblock %}
+
+{% block content %}
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% for category, message in messages %}
+            <div class="alert alert-{{ category }} alert-dismissible fade show mt-3">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        {% endfor %}
+    {% endwith %}
+
+    <h1 class="mb-4">Survey Report</h1>
+
+    {% if report_data|length == 0 %}
+        <div class="alert alert-info">
+            No survey responses found.
+        </div>
+    {% else %}
+        <div class="accordion" id="surveyAccordion">
+            {% for item in report_data %}
+                <div class="accordion-item">
+                    <h2 class="accordion-header">
+                    <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapse{{ loop.index }}" aria-expanded="true" aria-controls="collapse{{ loop.index }}">
+                        Question #{{ loop.index }}
+                    </button>
+                    </h2>
+                    <div id="collapse{{ loop.index }}" class="accordion-collapse show">
+                        <div class="accordion-body">
+                            <ul class="list-group list-group-flush list-group-horizontal" style="flex-wrap: wrap;">
+                                <li class="list-group-item border-0 flex-shrink-1">
+                                    <div class="card h-100" style="min-width: 0;">
+                                        <div class="card-body">
+                                            <h5 class="card-title">Question</h5>
+                                            <p class="card-text text-wrap text-break">{{ item.question }}</p>
+                                        </div>
+                                    </div>
+                                </li>
+                                <li class="list-group-item border-0" style="flex: 0 0 auto;">
+                                    <div class="card h-100" style="min-width: 0;">
+                                        <div class="card-body">
+                                            <h5 class="card-title">Choices</h5>
+                                            <p class="card-text">
+                                                {% for choice, count in item.choices.items() %}
+                                                    {{ choice }}: {{ count }}{% if not loop.last %}<br>{% endif %}
+                                                {% endfor %}
+                                            </p>
+                                        </div>
+                                    </div>
+                                </li>
+                                <li class="list-group-item border-0" style="flex: 0 0 auto;">
+                                    <div class="card h-100" style="min-width: 0;">
+                                        <div class="card-body">
+                                            <h5 class="card-title">Total Responses</h5>
+                                            <p class="card-text">{{ item.total_responses }}</p>
+                                        </div>
+                                    </div>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    {% endif %}
+{% endblock %}
