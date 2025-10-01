@@ -8,7 +8,7 @@ class User(db.Model):
     password_hash = db.Column(db.Text, nullable=False)
     is_admin = db.Column(db.Boolean, default=False, nullable=False)
     
-    contacts = db.relationship('Contact', backref='user', lazy=True)
+    contacts = db.relationship('Contact', back_populates='user', cascade="all, delete-orphan")
 
     def avg_rating(self):
         ratings = [contact.rating for contact in self.contacts if contact.rating is not None]
