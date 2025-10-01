@@ -122,8 +122,7 @@ def oauth2callback():
     return redirect(url_for('index'))
 
 ###################################################
-# Function to get Gmail service
-# DOn't use
+# Function to get Gmail service and refresh token if expired
 ###################################################
 def get_gmail_service():
     creds = None
@@ -133,16 +132,15 @@ def get_gmail_service():
         with open("token.pickle", "rb") as token:
             creds = pickle.load(token)
 
-    # If no (valid) credentials, redirect user to authorize
+    # Refresh if expired
+    if creds and creds.expired and creds.refresh_token:
+        creds.refresh(Request())
+        with open("token.pickle", "wb") as token:
+            pickle.dump(creds, token)
+
+    # If no creds at all, force re-auth
     if not creds or not creds.valid:
-        if creds and creds.expired and creds.refresh_token:
-            creds.refresh(Request())
-            # Save refreshed creds
-            with open("token.pickle", "wb") as token:
-                pickle.dump(creds, token)
-        else:
-            # No creds at all → need /authorize flow
-            return None
+        return None
 
     return build("gmail", "v1", credentials=creds)
 
@@ -150,14 +148,18 @@ def get_gmail_service():
 # Function to send email using Gmail API
 ###################################################
 def send_email(to_email, subject, html_content):
-    with open('token.pickle', 'rb') as token:
-        creds = pickle.load(token)
-    service = build('gmail', 'v1', credentials=creds)
+    service = get_gmail_service()
+    if not service:
+        flash("Authorization required. Please visit /authorize first.", "danger")
+        return
+    
     message = MIMEText(html_content, 'html')
     message['to'] = to_email
-    message['from'] = creds._client_id  # or your Gmail address
+    message['from'] = "me"
     message['subject'] = subject
+
     raw_message = base64.urlsafe_b64encode(message.as_bytes()).decode()
+
     try:
         service.users().messages().send(userId='me', body={'raw': raw_message}).execute()
     except HttpError as error:
@@ -387,7 +389,6 @@ def add_contact():
                     "<br><br>Please don't hesitate to reach out if you have any questions "\
                     "or want to further discuss something.<br><br>Best regards,<br>Hizb Ut Tahrir - America"
                 send_email(email, subject, html_content)
-                app.logger.info(f"Email sent to {email} via Gmail API")
             except Exception as e:
                 app.logger.error(f"Failed to send email via Gmail API: {e}")
                 flash('Failed to send email notification.', 'warning')
