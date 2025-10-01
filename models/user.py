@@ -1,4 +1,3 @@
-
 from . import db
 from werkzeug.security import generate_password_hash, check_password_hash
 
@@ -8,6 +7,7 @@ class User(db.Model):
     username = db.Column(db.String(80), unique=True, nullable=False)
     password_hash = db.Column(db.Text, nullable=False)
     is_admin = db.Column(db.Boolean, default=False, nullable=False)
+    
     contacts = db.relationship('Contact', backref='user', lazy=True)
 
     def avg_rating(self):

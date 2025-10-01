@@ -1,4 +1,3 @@
-
 from . import db
 
 class Contact(db.Model):
@@ -10,3 +9,6 @@ class Contact(db.Model):
     rating = db.Column(db.Integer)
     comments = db.Column(db.Text)
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+
+    user = db.relationship("User", back_populates="contacts")
+    survey_responses = db.relationship("SurveyResponse", back_populates="contact", cascade="all, delete-orphan")

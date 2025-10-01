@@ -1,6 +1,6 @@
 from flask import Flask, render_template, request, redirect, url_for, flash, session
 import os
-from models import db, Contact, User
+from models import db, Contact, User, surveyResponse, surveyQuestion, surveyChoice
 from flask_login import LoginManager, login_user, login_required, logout_user, current_user, UserMixin
 from flask_migrate import Migrate
 from sqlalchemy import desc, asc
@@ -349,6 +349,8 @@ def toggle_admin(user_id):
 @login_required
 def add_contact():
     # db.session.rollback()  # Clear any existing session state
+    questions = surveyQuestion.query.all()
+
     if request.method == 'POST':
         name = request.form['name']
         email = request.form['email'] or None
@@ -369,6 +371,18 @@ def add_contact():
             user_id=current_user.id
         )
         db.session.add(contact)
+        db.session.commit()
+
+        # Save survey responses
+        for question in questions:
+            answer = request.form.get(f"q_{question.id}")
+            if answer:
+                response = surveyResponse(
+                    contact_id=contact.id,
+                    question_id=question.id,
+                    answer=answer
+                )
+                db.session.add(response)
         db.session.commit()
 
         # send email notification if email is provided
