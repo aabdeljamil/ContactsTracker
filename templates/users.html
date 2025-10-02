@@ -21,13 +21,13 @@
     {% else %}
         <h6 style="font-style: italic;">Displaying {{ users|length }} User(s)</h6>
         <div class="table-responsive">
-            <table class="table table-striped table-hover table-bordered">
+            <table class="table table-striped table-hover table-bordered" data-toggle="table" data-search="true" data-sortable="true" data-pagination="true" data-pagination-v-align="both">
                 <thead class="table-primary">
                     <tr>
-                        <th scope="col" class="text-center">Name</th>
-                        <th scope="col" class="text-center">Contacts</th>
-                        <th scope="col" class="text-center">Rating</th>
-                        <th scope="col" class="text-center">Admin</th>
+                        <th scope="col" class="text-center" data-sortable="true">Name</th>
+                        <th scope="col" class="text-center" data-sortable="true">Contacts</th>
+                        <th scope="col" class="text-center" data-sortable="true">Rating</th>
+                        <th scope="col" class="text-center" data-sortable="true">Admin</th>
                         {% if current_user.is_admin %}
                             <th scope="col" class="text-center">Actions</th>
                         {% endif %}

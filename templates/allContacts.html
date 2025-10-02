@@ -19,18 +19,17 @@
             No contacts found.
         </div>
     {% else %}
-        <h6 style="font-style: italic;">Displaying {{ contacts|length }} Contact(s)</h6>
         <div class="table-responsive">
-            <table class="table table-striped table-hover table-bordered">
+            <table class="table table-striped table-hover table-bordered" data-toggle="table" data-search="true" data-sortable="true" data-pagination="true" data-pagination-v-align="both">
                 <thead class="table-primary">
                     <tr>
-                        <th scope="col">Name</th>
-                        <th scope="col">Email</th>
-                        <th scope="col">Phone</th>
-                        <th scope="col">Rating</th>
-                        <th scope="col">Comments</th>
+                        <th scope="col" data-sortable="true">Name</th>
+                        <th scope="col" data-sortable="true">Email</th>
+                        <th scope="col" data-sortable="true">Phone</th>
+                        <th scope="col" data-sortable="true">Rating</th>
+                        <th scope="col" data-sortable="true">Comments</th>
                         {% if title == 'All Contacts' %}
-                            <th scope="col">User</th>
+                            <th scope="col" data-sortable="true">User</th>
                         {% endif %}
                     </tr>
                 </thead>
